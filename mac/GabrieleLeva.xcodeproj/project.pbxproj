@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		02115AD62940F20E007C45B0 /* WeirdDelay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 02115AD42940F20E007C45B0 /* WeirdDelay.cpp */; };
-		02115AD92940F60A007C45B0 /* DelayLine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 02115AD72940F60A007C45B0 /* DelayLine.cpp */; };
 		DC71300D22022E0D0021F163 /* audioeffect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DC71300822022E0D0021F163 /* audioeffect.cpp */; };
 		DC71300E22022E0D0021F163 /* audioeffectx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DC71300922022E0D0021F163 /* audioeffectx.cpp */; };
 		DC71300F22022E0D0021F163 /* vstplugmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DC71300B22022E0D0021F163 /* vstplugmain.cpp */; };
@@ -17,7 +16,6 @@
 /* Begin PBXFileReference section */
 		02115AD42940F20E007C45B0 /* WeirdDelay.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WeirdDelay.cpp; sourceTree = "<group>"; };
 		02115AD52940F20E007C45B0 /* WeirdDelay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WeirdDelay.hpp; sourceTree = "<group>"; };
-		02115AD72940F60A007C45B0 /* DelayLine.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DelayLine.cpp; sourceTree = "<group>"; };
 		02115AD82940F60A007C45B0 /* DelayLine.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DelayLine.hpp; sourceTree = "<group>"; };
 		02A0056729473728007999ED /* DSP.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DSP.hpp; sourceTree = "<group>"; };
 		02A00568294795E4007999ED /* Filter.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Filter.hpp; sourceTree = "<group>"; };
@@ -97,7 +95,6 @@
 			children = (
 				02115AD42940F20E007C45B0 /* WeirdDelay.cpp */,
 				02115AD52940F20E007C45B0 /* WeirdDelay.hpp */,
-				02115AD72940F60A007C45B0 /* DelayLine.cpp */,
 				02115AD82940F60A007C45B0 /* DelayLine.hpp */,
 				02A0056729473728007999ED /* DSP.hpp */,
 				02A00568294795E4007999ED /* Filter.hpp */,
@@ -182,7 +179,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				02115AD92940F60A007C45B0 /* DelayLine.cpp in Sources */,
 				DC71300E22022E0D0021F163 /* audioeffectx.cpp in Sources */,
 				DC71300D22022E0D0021F163 /* audioeffect.cpp in Sources */,
 				DC71300F22022E0D0021F163 /* vstplugmain.cpp in Sources */,

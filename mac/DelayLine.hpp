@@ -15,7 +15,7 @@ class DelayLine{
    
 public:
     
-    int counter;
+    int counter, sizeOfDelayTime;
     
     float* BufferL;
     float* BufferR;
@@ -31,7 +31,8 @@ public:
 DelayLine::DelayLine()
 {
     counter = 0;
-   
+    sizeOfDelayTime = 0;
+    
     BufferL = NULL;
     BufferR = NULL;
     
@@ -45,8 +46,8 @@ DelayLine::~DelayLine()
 void DelayLine::initDelayLine(int sample_rate, int del_max_delay){
     
     counter = 0;
-
-    int sizeOfDelayTime = del_max_delay * sample_rate * sizeof(float);
+    
+    sizeOfDelayTime = del_max_delay * sample_rate * sizeof(float);
     
     if(NULL != BufferL)
         free(BufferL);

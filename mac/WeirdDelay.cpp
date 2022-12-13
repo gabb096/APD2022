@@ -9,7 +9,7 @@ AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
     return new WeirdDelay(audioMaster);
 }
 
-//========= WeirdDelay FUNCTIONS =======================================================================================
+//============================== WeirdDelay FUNCTIONS ==============================
 
 WeirdDelay::WeirdDelay(audioMasterCallback audioMaster)
 : AudioEffectX(audioMaster, 0, WDParam_NumParam)    // n program, n parameters
@@ -22,16 +22,18 @@ WeirdDelay::WeirdDelay(audioMasterCallback audioMaster)
 
 void WeirdDelay::InitPlugin()
 {
-    DelayTime = 0.1;
-    FeedBack = 0;
+    DelayTime = 0.25;
+    FeedBack  = 0.3;
     Weirdness = 0;
-    DryWet = 0;
+    DryWet    = 0.5;
     
-    DelayLine1.initDelayLine(getSampleRate(), MAX_DELAY_TIME );
-    DelayLine2.initDelayLine(getSampleRate(), MAX_DELAY_TIME*2 );
-
+    DelayLine1.initDelayLine( getSampleRate(), MAX_DELAY_TIME );
+    
+    DelayLine2.initDelayLine( getSampleRate(), MAX_DELAY_TIME );
+    DelayLine2.counter = 0;
+    
     LP1.InitFilter(getSampleRate(), 1000, FilterType_lp);
-    LP2.InitFilter(getSampleRate(), 1000, FilterType_lp);
+    LP2.InitFilter(getSampleRate(),  300, FilterType_lp);
     LP3.InitFilter(getSampleRate(), 1000, FilterType_lp);
     HP1.InitFilter(getSampleRate(),  100, FilterType_hp);
     
@@ -42,7 +44,7 @@ WeirdDelay::~WeirdDelay()
     
 }
 
-//========= VST PROCESSING =======================================================================================
+//============================== VST PROCESSING ==============================
 
 void WeirdDelay::processReplacing(float** inputs, float** outputs, VstInt32 sampleFrames)
 {
@@ -54,52 +56,69 @@ void WeirdDelay::processReplacing(float** inputs, float** outputs, VstInt32 samp
     float *outL = outputs[0]; // buffer output left
     float *outR = outputs[1]; // buffer output right
         
-    int delayLineSize = DelayTime*getSampleRate();
-    
+    DelayLine1.sizeOfDelayTime = DelayTime*getSampleRate();
+    DelayLine2.sizeOfDelayTime = MAX_DELAY_TIME*getSampleRate()*2;
+
     for(int i=0; i<sampleFrames; ++i)
     {
-        outL[i] = inL[i];
-        outR[i] = inR[i];
-        
-        float oldestSampleL = DelayLine1.BufferL[DelayLine1.counter];
-        float oldestSampleR = DelayLine1.BufferR[DelayLine1.counter];
-        
-        LP1.processSample(oldestSampleL);
-        LP1.processSample(oldestSampleR);
-        
-        DelayLine1.BufferL[DelayLine1.counter] = saturation( inL[i] + (oldestSampleL * FeedBack) );
-        DelayLine1.BufferR[DelayLine1.counter] = saturation( inR[i] + (oldestSampleR * FeedBack) );
-        
-        /* TO-DO  [4] Compute the "weird" algorithm / delay read */
+//        outL[i] = inL[i];
+//        outR[i] = inR[i];
+// ============================== Main Delay Output + LowPass ==============================
+        float Signal_L = DelayLine1.BufferL[DelayLine1.counter];
+        Signal_L = LP1.processSample(Signal_L);
 
-        /* TO-DO  [5.1] filter weird Line output with a 1 pole LowPass @ f_cut = 1/DelayTime */
+        float Signal_R = DelayLine1.BufferR[DelayLine1.counter];
+        Signal_R = LP1.processSample(Signal_R);
         
-        /* TO-DO  [5.2] wavefold the [5.1] signal and multiply by Weirdness */
+// ============================== Secondary Delay Output + LowPass + Wavefolding ==============================
+        float secondSignal_L = DelayLine2.BufferL[DelayLine2.counter];
+        secondSignal_L = LP2.processSample(secondSignal_L);
+        secondSignal_L = wavefolding(1.2, secondSignal_L, 1);
 
-        /* TO-DO  [6] saturate the sum of Main delay outuput and [5.2] signals */
-        
-        /* TO-DO  [7] saturate the output of [7] */
+        float secondSignal_R = DelayLine2.BufferR[DelayLine2.counter];
+        secondSignal_R = LP2.processSample(secondSignal_R);
+        secondSignal_R = wavefolding(1.2, secondSignal_R, 1);
 
-        /* TO-DO  [8] filter the output of [7] with a 1 pole HighPass @ 100 Hz */
+// Main_Delay_Output * Feedback + Direct_Input and saturation of their sum became the input of the Main_Delay_Line
+        Signal_L = saturation( inL[i] + (Signal_L * FeedBack) );
+        Signal_R = saturation( inR[i] + (Signal_R * FeedBack) );
         
-        /* TO-DO  [9] Dry/Wet direct signal and [8] */
+        DelayLine1.BufferL[DelayLine1.counter] = Signal_L;
+        DelayLine1.BufferR[DelayLine1.counter] = Signal_R;
         
-        outL[i] = oldestSampleL;
-        outR[i] = oldestSampleR;
+// ============================== INVERTING LEFT AND RIGHT SIGNALS OF SECONDSIGNAL ==============================
+        DelayLine2.BufferL[DelayLine2.counter] = (Signal_L + secondSignal_R)/2;
+        DelayLine2.BufferR[DelayLine2.counter] = (Signal_R + secondSignal_L)/2;
+
+// ============================== MainSignal + processed second signal ==============================
+        Signal_L += LP3.processSample(secondSignal_L)*Weirdness;
+        Signal_R += LP3.processSample(secondSignal_R)*Weirdness;
+//
         
+// ============================== Saturation of Main_Signal after HighPass @ 100Hz ==============================
+        Signal_L = wavefolding(1.5, HP1.processSample(Signal_L) * (1+Weirdness), 1 );
+        Signal_R = wavefolding(1.5, HP1.processSample(Signal_R) * (1+Weirdness), 1 );
+        
+// ============================== Update delay lines ==============================
+
         DelayLine1.counter += 1;
-        
-        if(DelayLine1.counter > delayLineSize)
+       
+        if(DelayLine1.counter > DelayLine1.sizeOfDelayTime)
             DelayLine1.counter = 0;
         
-        // Output stage
-        outL[i] = inL[i]*(1-DryWet) + outL[i]*DryWet;
-        outR[i] = inR[i]*(1-DryWet) + outL[i]*DryWet;
+        DelayLine2.counter += 1;
+
+        if(DelayLine2.counter > DelayLine2.sizeOfDelayTime)
+            DelayLine2.counter = 0;
+        
+// ============================== Dry/Wet Direct_Input and Processed_Signal ==============================
+        outL[i] = inL[i]*(1-DryWet) + Signal_L*DryWet;
+        outR[i] = inR[i]*(1-DryWet) + Signal_R*DryWet;
         
     }
 }
 
-//========= VST INTERFACE =======================================================================================
+// ============================== VST INTERFACE ==============================
 
 void WeirdDelay::setParameter (VstInt32 index, float value)
 {
@@ -180,7 +199,7 @@ void WeirdDelay::getParameterDisplay (VstInt32 index, char* text)
 {
     switch (index) {
         case WDParam_FeedBack:
-            float2string(FeedBack, text, kVstMaxParamStrLen);
+            float2string(FeedBack*100, text, kVstMaxParamStrLen);
             break;
             
         case WDParam_Weirdness:
