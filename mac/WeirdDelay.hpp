@@ -9,6 +9,7 @@
 #include "public.sdk/source/vst2.x/audioeffectx.h"
 #include <memory>
 #include "DelayLine.hpp"
+#include "DelayLine_V2.hpp"
 #include "DSP.hpp"
 #include "Filter.hpp"
 
@@ -23,18 +24,21 @@ enum WeirdDelayParam{
     WDParam_NumParam
 };
 
-//=========================================================================================================
+//====================================================================
 
 class WeirdDelay : public AudioEffectX
 {
 
     float DelayTime, FeedBack, Weirdness, DryWet;
-    
-    DelayLine DelayLine1, DelayLine2;
+        
+    DelayLine DelayLine_1;
+    DelayLine_V2 DelayLine_2;
     
     Filter LP1, LP2, LP3, HP1;
     
     void InitPlugin();
+    float denormDelayTime();
+
 
 public:
 
@@ -43,7 +47,8 @@ public:
     
     virtual void processReplacing(float** inputs, float** outputs, VstInt32 sampleFrames) override;
     //virtual void processDoubleReplacing(double** inputs, double** outputs, VstInt32 sampleFrames) override;
-
+    
+    virtual void setSampleRate (float sampleRate) override;
     virtual void setParameter (VstInt32 index, float value) override;
     virtual float getParameter (VstInt32 index) override;
     virtual void getParameterLabel (VstInt32 index, char* label) override;

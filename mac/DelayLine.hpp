@@ -24,7 +24,7 @@ public:
     DelayLine();
     ~DelayLine();
     
-    void initDelayLine(int sample_rate, int del_max_delay);
+    void initDelayLine(int sample_rate, float del_max_delay);
     
 };
 
@@ -43,7 +43,7 @@ DelayLine::~DelayLine()
     
 }
 
-void DelayLine::initDelayLine(int sample_rate, int del_max_delay){
+void DelayLine::initDelayLine(int sample_rate, float del_max_delay){
     
     counter = 0;
     

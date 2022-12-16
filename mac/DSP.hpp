@@ -26,12 +26,12 @@ float saturation(float input) // based on the approximation of tanh(x)
     }
 }
 
-float wavefolding(float preGain, float sample, int iteration)
+float wavefolding(float preGain, float sample, int iterations)
 {
     
     sample *= preGain;
     
-    for(int i=0; i<iteration; ++i)
+    for(int i=0; i<iterations; ++i)
     {
         if(sample > 1)
             sample = 2 - sample;
@@ -42,5 +42,18 @@ float wavefolding(float preGain, float sample, int iteration)
 
     return sample;
 }
+
+float clip(float gain, float sample, float negative, float positive)
+{
+    sample *= gain;
+    
+    if(sample > positive)
+        sample = positive;
+    else if(sample < negative)
+        sample = negative;
+
+    return sample;
+}
+
 
 #endif /* DSP_hpp */
