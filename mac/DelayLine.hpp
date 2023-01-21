@@ -1,9 +1,3 @@
-//
-//  DelayLine.hpp
-//  GabrieleLeva
-//
-//  Created by Gabriele on 07/12/22.
-//
 #ifndef DelayLine_hpp
 #define DelayLine_hpp
 
@@ -28,8 +22,7 @@ public:
     
 };
 
-DelayLine::DelayLine()
-{
+DelayLine::DelayLine(){
     counter = 0;
     sizeOfDelayTime = 0;
     
@@ -38,8 +31,7 @@ DelayLine::DelayLine()
     
 }
 
-DelayLine::~DelayLine()
-{
+DelayLine::~DelayLine(){
     
 }
 

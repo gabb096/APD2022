@@ -1,49 +1,46 @@
-//
-//  WeirdDelay.hpp
-//  GabrieleLeva
-//
-//  Created by Gabriele on 07/12/22.
-//
-
 #include <stdio.h>
 #include "public.sdk/source/vst2.x/audioeffectx.h"
 #include <memory>
 #include "DelayLine.hpp"
-#include "DelayLine_V2.hpp"
-#include "DSP.hpp"
+#include "Distorsions.hpp"
 #include "Filter.hpp"
+#include "LowFreqOsc.hpp"
+
 
 using namespace std;
 
 
-enum WeirdDelayParam{
-    WDParam_DelayTime,
-    WDParam_FeedBack,
-    WDParam_Weirdness,
-    WDParam_DryWet,
-    WDParam_NumParam
+enum VibLayParam{
+    VDParam_DelayTime,
+    VDParam_FeedBack,
+    VDParam_Rate,
+    VDParam_Pattern,
+    VDParam_DryWet,
+    VDParam_NumParam
 };
 
 //====================================================================
 
-class WeirdDelay : public AudioEffectX
-{
+class VibLay : public AudioEffectX{
 
-    float DelayTime, FeedBack, Weirdness, DryWet;
+    float DelayTime, FeedBack, Rate, Pattern, DryWet;
+    int index;
         
-    DelayLine DelayLine_1;
-    DelayLine_V2 DelayLine_2;
+    DelayLine DelayLine;
     
-    Filter LP1, LP2, LP3, HP1;
+    Filter LP1;
+    
+    LowFreqOsc LFO1, LFO2;
     
     void InitPlugin();
-    float denormDelayTime();
-
+    
+    float denormParameters(VstInt32 index);
 
 public:
 
-    WeirdDelay(audioMasterCallback audioMaster);
-    ~WeirdDelay();
+    VibLay(audioMasterCallback audioMaster);
+    ~VibLay();
+    void init();
     
     virtual void processReplacing(float** inputs, float** outputs, VstInt32 sampleFrames) override;
     //virtual void processDoubleReplacing(double** inputs, double** outputs, VstInt32 sampleFrames) override;
