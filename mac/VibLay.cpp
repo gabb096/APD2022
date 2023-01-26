@@ -4,8 +4,7 @@
 #define MIN_DELAY_TIME 0.01
 #define MAX_DELAY_TIME 2.5
 
-#define NUM_PATTERN 8
-#define MAX_EXTEND  20
+#define MAX_VARIATION 15
 
 AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
 {
@@ -31,12 +30,13 @@ void VibLay::setSampleRate (float sampleRate)
 
 void VibLay::InitPlugin()
 {
-    DelayTime = 0.7;
-    FeedBack  = 0.4;
-    Rate      = 0;
-    Pattern   = 0;
-    DryWet    = 0.5;
-    index     = 0;
+    DelayTime  = 0.7;
+    FeedBack   = 0.4;
+    Rate       = 0.5;
+    Pattern    = 0.1;
+    Saturation = 0.2;
+    DryWet     = 0.5;
+    index      = 0;
     
     init();
 }
@@ -44,17 +44,11 @@ void VibLay::InitPlugin()
 void VibLay::init(){
     
     DelayLine.initDelayLine( getSampleRate(), MAX_DELAY_TIME );
-    
-    LP1.InitFilter(getSampleRate(), 200, FilterType_lp);
-    
-    LFO1.initLFO(getSampleRate(), 2, waveShape_sin);
-    LFO2.initLFO(getSampleRate(), 2, waveShape_sin);
+    Seq.initSequencer(getSampleRate());
+    LP.InitFilter(getSampleRate(), 5000, FilterType_lp);
 }
 
-VibLay::~VibLay()
-{
-    
-}
+VibLay::~VibLay() {   }
 
 //============================== VST PROCESSING ==============================
 
@@ -74,7 +68,6 @@ void VibLay::processReplacing(float** inputs, float** outputs, VstInt32 sampleFr
 
     for(int i=0; i<sampleFrames; ++i)
     {
-        
         /* Delay Section */
         signal_L = DelayLine.BufferL[index];
         signal_R = DelayLine.BufferR[index];
@@ -85,36 +78,33 @@ void VibLay::processReplacing(float** inputs, float** outputs, VstInt32 sampleFr
         signal_L += inL[i];
         signal_R += inR[i];
 
-        /* LFO Section*/
-        lfo = LFO1.GetOutputValue() + LFO2.GetOutputValue();
+        /* Sequencer Output*/
+                
+        signal_L *= Seq.output();
+        signal_R *= Seq.output();
+
+        /* Distortion */
+        float S = 1.f + 2 * Saturation;
         
-        if (Pattern != 0)
-            lfo = (lfo >= 0.75) ? 1 : 0;
-
-        lfo = LP1.processSample(lfo);
-
-        /* Modulation Section */
-        signal_L *= lfo;
-        signal_R *= lfo;
-
-        /* Distortion section */
-        signal_L = saturation(signal_L * 1.3);
-        signal_R = saturation(signal_R * 1.3);
+        signal_L = saturation( signal_L * S);
+        signal_R = saturation( signal_R * S);
+        
+        signal_L += wavefolding( 1.f, signal_L) / 2;
+        signal_R += wavefolding( 1.f, signal_R) / 2;
+        
+        LP.processSample(signal_L);
+        LP.processSample(signal_R);
 
         /* OutputSignal -> Dry/Wet -> Clip Limiting*/
         outL[i] = clip(1.f, inL[i] * (1.f-DryWet) + signal_L * DryWet, -1.f, 1.f);
         outR[i] = clip(1.f, inR[i] * (1.f-DryWet) + signal_R * DryWet, -1.f, 1.f);
         
-//        outL[i] = lfo;
-//        outR[i]=  lfo;
         /* Update delay line and LFOs*/
-
-        LFO1.AdvanceCounter();
-        LFO2.AdvanceCounter();
-        
         index ++;
         if( index >= sizeofdelayline )
             index -= sizeofdelayline;
+        
+        Seq.advanceCounter();
         
     }
 }
@@ -148,42 +138,44 @@ float VibLay::denormParameters(VstInt32 index)
             break;
         
         case VDParam_Pattern:
-            return 1.0 + 0.1 * floor(Pattern * NUM_PATTERN);
+            return (int) (1 + Pattern * NUM_SEQUENCES);
             break;
             
-        case VDParam_Rate:
-            return denormParameters(VDParam_DelayTime) * Rate * MAX_EXTEND;
+        case VDParam_Rate:{
+            float  k = 1.f/NUM_STEP;
+            return k + Rate * (NUM_STEP - k);
+            }
             break;
         
         default:
+            return 0;
             break;
     }
 }
-
 
 void VibLay::setParameter (VstInt32 index, float value)
 {
     switch (index) {
         case VDParam_DelayTime:
             DelayTime = value;
-
-            LFO1.SetFrequenccy( denormParameters(VDParam_Rate) );
-            LFO2.SetFrequenccy( LFO1.getFrequency() * denormParameters(VDParam_Pattern));
             break;
         
         case VDParam_Rate:
             Rate = value;
-            LFO1.SetFrequenccy( denormParameters(VDParam_Rate) );
-            LFO2.SetFrequenccy( LFO1.getFrequency() * denormParameters(VDParam_Pattern));
+            Seq.setFrequenccy(denormParameters(VDParam_Rate));
             break;
             
         case VDParam_Pattern:
             Pattern = value;
-            LFO2.SetFrequenccy( LFO1.getFrequency() * denormParameters(VDParam_Pattern));
+            Seq.setSequence((int)(denormParameters(VDParam_Pattern)-1));
             break;
             
         case VDParam_FeedBack:
             FeedBack = value;
+            break;
+            
+        case VDParam_Saturation:
+            Saturation = value;
             break;
         
         case VDParam_DryWet:
@@ -216,6 +208,10 @@ float VibLay::getParameter (VstInt32 index)
             toReturn = DelayTime;
             break;
             
+        case VDParam_Saturation:
+            toReturn = Saturation;
+            break;
+            
         case VDParam_DryWet:
             toReturn = DryWet;
             break;
@@ -239,11 +235,15 @@ void VibLay::getParameterLabel (VstInt32 index, char* label)
             break;
             
         case VDParam_Pattern:
-            vst_strncpy(label, "P", kVstMaxParamStrLen);
+            vst_strncpy(label, "Hz", kVstMaxParamStrLen);
             break;
             
         case VDParam_DelayTime:
             vst_strncpy(label, "S", kVstMaxParamStrLen);
+            break;
+            
+        case VDParam_Saturation:
+            vst_strncpy(label, "%", kVstMaxParamStrLen);
             break;
             
         case VDParam_DryWet:
@@ -260,43 +260,46 @@ void VibLay::getParameterDisplay (VstInt32 index, char* text)
 {
     switch (index) {
         case VDParam_FeedBack:
-            int2string(FeedBack*100, text, kVstMaxParamStrLen);
+            int2string( FeedBack*100, text, kVstMaxParamStrLen);
             break;
             
         case VDParam_Pattern:
-            int2string(Pattern * NUM_PATTERN + 1, text, kVstMaxParamStrLen);
+            int2string( denormParameters(VDParam_Pattern), text, kVstMaxParamStrLen);
             break;
-
             
         case VDParam_Rate:
-            float2string(denormParameters(VDParam_Rate), text, kVstMaxParamStrLen);
+            float2string( denormParameters(VDParam_Rate), text, kVstMaxParamStrLen);
             break;
             
         case VDParam_DelayTime:
             
             if(DelayTime <= 0.5)
-                float2string(denormParameters(VDParam_DelayTime), text, kVstMaxParamStrLen);
+                float2string( denormParameters(VDParam_DelayTime), text, kVstMaxParamStrLen);
             else if (DelayTime <= 0.583)
-                vst_strncpy(text, "1/2", kVstMaxParamStrLen);
+                vst_strncpy(text, "1/2",  kVstMaxParamStrLen);
             else if (DelayTime <= 0.666)
                 vst_strncpy(text, "1/4T", kVstMaxParamStrLen);  // triplets quarter note echo
             else if (DelayTime <= 0.750)
-                vst_strncpy(text, "1/4", kVstMaxParamStrLen);  // quarter note echo
+                vst_strncpy(text, "1/4",  kVstMaxParamStrLen);  // quarter note echo
             else if (DelayTime <= 0.833)
                 vst_strncpy(text, "1/8D", kVstMaxParamStrLen);  // dotted eights note echo
             else if (DelayTime <= 0.916)
-                vst_strncpy(text, "1/8", kVstMaxParamStrLen);  //  eights note echo
+                vst_strncpy(text, "1/8",  kVstMaxParamStrLen);  //  eights note echo
             else
                 vst_strncpy(text, "1/8T", kVstMaxParamStrLen);  // triplets eights note echo
         break;
             
+        case VDParam_Saturation:
+            int2string( Saturation*100, text, kVstMaxParamStrLen);
+            break;
+            
         case VDParam_DryWet:
             if(DryWet == 0)
                 vst_strncpy(text, "Dry", kVstMaxParamStrLen);
-            else if(DryWet==1)
-                vst_strncpy(text, "Wet", kVstMaxParamStrLen); 
+            else if(DryWet == 1)
+                vst_strncpy(text, "Wet", kVstMaxParamStrLen);
             else
-                float2string(DryWet*100, text, kVstMaxParamStrLen);
+                int2string( DryWet*100, text, kVstMaxParamStrLen);
             break;
             
         default:
@@ -321,7 +324,11 @@ void VibLay::getParameterName (VstInt32 index, char* text)
             break;
             
         case VDParam_Pattern:
-            vst_strncpy(text, "Pattern", kVstMaxParamStrLen);
+            vst_strncpy(text, "Var[x]", kVstMaxParamStrLen);
+            break;
+            
+        case VDParam_Saturation:
+            vst_strncpy(text, "Saturn", kVstMaxParamStrLen);
             break;
             
         case VDParam_DryWet:

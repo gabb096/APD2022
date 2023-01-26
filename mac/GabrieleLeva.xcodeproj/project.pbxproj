@@ -17,6 +17,7 @@
 		02115AD42940F20E007C45B0 /* VibLay.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = VibLay.cpp; sourceTree = "<group>"; };
 		02115AD52940F20E007C45B0 /* VibLay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = VibLay.hpp; sourceTree = "<group>"; };
 		02115AD82940F60A007C45B0 /* DelayLine.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DelayLine.hpp; sourceTree = "<group>"; };
+		027089DB297FF05D004A5B49 /* Sequencer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Sequencer.hpp; sourceTree = "<group>"; };
 		02A0056729473728007999ED /* Distorsions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Distorsions.hpp; sourceTree = "<group>"; };
 		02A00568294795E4007999ED /* Filter.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Filter.hpp; sourceTree = "<group>"; };
 		02F230DE2953604D0040A57E /* LowFreqOsc.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = LowFreqOsc.hpp; sourceTree = "<group>"; };
@@ -102,6 +103,7 @@
 				02A0056729473728007999ED /* Distorsions.hpp */,
 				02A00568294795E4007999ED /* Filter.hpp */,
 				02F230DE2953604D0040A57E /* LowFreqOsc.hpp */,
+				027089DB297FF05D004A5B49 /* Sequencer.hpp */,
 			);
 			name = src;
 			sourceTree = "<group>";

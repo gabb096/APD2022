@@ -5,6 +5,7 @@
 #include "Distorsions.hpp"
 #include "Filter.hpp"
 #include "LowFreqOsc.hpp"
+#include "Sequencer.hpp"
 
 
 using namespace std;
@@ -15,6 +16,7 @@ enum VibLayParam{
     VDParam_FeedBack,
     VDParam_Rate,
     VDParam_Pattern,
+    VDParam_Saturation,
     VDParam_DryWet,
     VDParam_NumParam
 };
@@ -23,14 +25,15 @@ enum VibLayParam{
 
 class VibLay : public AudioEffectX{
 
-    float DelayTime, FeedBack, Rate, Pattern, DryWet;
+    float DelayTime, FeedBack, Rate, Pattern, Saturation, DryWet;
     int index;
+    
         
     DelayLine DelayLine;
     
-    Filter LP1;
-    
-    LowFreqOsc LFO1, LFO2;
+    Filter LP;
+        
+    Sequencer Seq;
     
     void InitPlugin();
     
