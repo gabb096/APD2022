@@ -98,16 +98,14 @@ void Sequencer::initSequencer(int _SampleRate){
     pong           = 0.01;
         
     // initializing each pattern with a different euclidean rhythm
-    for (int s=0; s<NUM_SEQUENCES; s++){
+    int num_Notes [NUM_SEQUENCES] = { 4, 6, 7, 9, 10, 11, 12, 13 };
+
+    for (int i=0; i<NUM_SEQUENCES; i++)
+        for(int j=0; j<NUM_STEP; j++){
         
-        for(int i=0; i<NUM_STEP; i++){
-        
-            int num_Notes = s+3;
-            int a = (i * num_Notes) % NUM_STEP;
-            
-            Sequences[s][i] = a < num_Notes ? 1 : 0;
+            int a = (j * num_Notes[i]) % NUM_STEP;
+            Sequences[i][j] = a < num_Notes[i] ? 1 : 0;
         }
-    }
     
 }
 
@@ -120,15 +118,15 @@ float Sequencer::output(){
     else {
                 
         if(Sequences[CurrentSeq][CurrentStep]){
-            previewsOutput += 2000.f/(float)sampleRate;
+            previewsOutput += 60/(float)sampleRate; // Fade in for the rise of the signal
             output = previewsOutput < 1.f ? previewsOutput : 1.f; // MIN(previewsOutput,1)
             
             previewsOutput = output;
         }
             
         else{
-            previewsOutput -= 2000.f/(float)sampleRate;
-            output = previewsOutput> 0.f ? previewsOutput : 0.f; // MAX(previewsOutput,0)
+            previewsOutput -= 60/(float)sampleRate; // Fade out for the decrease of the signal
+            output = previewsOutput> 0.001 ? previewsOutput : 0.001; // MAX(previewsOutput,0)
             
             previewsOutput = output;
         }

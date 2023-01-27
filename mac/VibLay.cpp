@@ -4,10 +4,7 @@
 #define MIN_DELAY_TIME 0.01
 #define MAX_DELAY_TIME 2.5
 
-#define MAX_VARIATION 15
-
-AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
-{
+AudioEffect* createEffectInstance(audioMasterCallback audioMaster){
     return new VibLay(audioMaster);
 }
 
@@ -22,18 +19,16 @@ VibLay::VibLay(audioMasterCallback audioMaster)
     InitPlugin();
 }
 
-void VibLay::setSampleRate (float sampleRate)
-{
+void VibLay::setSampleRate (float sampleRate){
     AudioEffect::setSampleRate(sampleRate);
     init();
 }
 
-void VibLay::InitPlugin()
-{
+void VibLay::InitPlugin(){
     DelayTime  = 0.7;
     FeedBack   = 0.4;
     Rate       = 0.5;
-    Pattern    = 0.1;
+    Pattern    = 0.05;
     Saturation = 0.2;
     DryWet     = 0.5;
     index      = 0;
@@ -44,7 +39,11 @@ void VibLay::InitPlugin()
 void VibLay::init(){
     
     DelayLine.initDelayLine( getSampleRate(), MAX_DELAY_TIME );
+    
     Seq.initSequencer(getSampleRate());
+    Seq.setFrequenccy(denormParameters(VDParam_Rate));
+    Seq.setSequence(denormParameters(VDParam_Pattern));
+    
     LP.InitFilter(getSampleRate(), 5000, FilterType_lp);
 }
 
@@ -52,8 +51,8 @@ VibLay::~VibLay() {   }
 
 //============================== VST PROCESSING ==============================
 
-void VibLay::processReplacing(float** inputs, float** outputs, VstInt32 sampleFrames)
-{
+void VibLay::processReplacing(float** inputs, float** outputs, VstInt32 sampleFrames){
+    
     // PROCESS SINGLE PRECISION
     float *inL = inputs[0]; // buffer input left
     float *inR = inputs[1]; // buffer input right
@@ -64,7 +63,6 @@ void VibLay::processReplacing(float** inputs, float** outputs, VstInt32 sampleFr
     int sizeofdelayline = denormParameters(VDParam_DelayTime) * getSampleRate();
     float signal_L = 0;
     float signal_R = 0;
-    float lfo      = 0;
 
     for(int i=0; i<sampleFrames; ++i)
     {
@@ -83,15 +81,18 @@ void VibLay::processReplacing(float** inputs, float** outputs, VstInt32 sampleFr
         signal_L *= Seq.output();
         signal_R *= Seq.output();
 
-        /* Distortion */
-        float S = 1.f + 2 * Saturation;
+        /* Distortion & Low Pass Filter*/
+        float S = 1.f + 20 * Saturation;
         
         signal_L = saturation( signal_L * S);
         signal_R = saturation( signal_R * S);
         
-        signal_L += wavefolding( 1.f, signal_L) / 2;
-        signal_R += wavefolding( 1.f, signal_R) / 2;
+        signal_L += wavefolding( 2.f, signal_L) * 0.06;
+        signal_R += wavefolding( 2.f, signal_R) * 0.06;
         
+        signal_L *= 0.4; // 4 dB Pad
+        signal_R *= 0.4; // 4 dB Pad
+
         LP.processSample(signal_L);
         LP.processSample(signal_R);
 
