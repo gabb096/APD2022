@@ -20,8 +20,6 @@
 		027089DB297FF05D004A5B49 /* Sequencer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Sequencer.hpp; sourceTree = "<group>"; };
 		02A0056729473728007999ED /* Distorsions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Distorsions.hpp; sourceTree = "<group>"; };
 		02A00568294795E4007999ED /* Filter.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Filter.hpp; sourceTree = "<group>"; };
-		02F230DE2953604D0040A57E /* LowFreqOsc.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = LowFreqOsc.hpp; sourceTree = "<group>"; };
-		02FEE22A294C9A31005C3F4E /* DelayLine_V2.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DelayLine_V2.hpp; sourceTree = "<group>"; };
 		08EA7FFBFE8413EDC02AAC07 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		8D01CCD20486CAD60068D4B7 /* VibLay.vst */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VibLay.vst; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC71300722022E0D0021F163 /* audioeffect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = audioeffect.h; path = ../vstsdk2.4/public.sdk/source/vst2.x/audioeffect.h; sourceTree = "<group>"; };
@@ -99,10 +97,8 @@
 				02115AD42940F20E007C45B0 /* VibLay.cpp */,
 				02115AD52940F20E007C45B0 /* VibLay.hpp */,
 				02115AD82940F60A007C45B0 /* DelayLine.hpp */,
-				02FEE22A294C9A31005C3F4E /* DelayLine_V2.hpp */,
 				02A0056729473728007999ED /* Distorsions.hpp */,
 				02A00568294795E4007999ED /* Filter.hpp */,
-				02F230DE2953604D0040A57E /* LowFreqOsc.hpp */,
 				027089DB297FF05D004A5B49 /* Sequencer.hpp */,
 			);
 			name = src;

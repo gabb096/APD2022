@@ -27,8 +27,8 @@ void VibLay::setSampleRate (float sampleRate){
 void VibLay::InitPlugin(){
     DelayTime  = 0.7;
     FeedBack   = 0.4;
-    Rate       = 0.5;
-    Pattern    = 0.05;
+    Rate       = 0.2;
+    Pattern    = 0.f;
     Saturation = 0.2;
     DryWet     = 0.5;
     index      = 0;
@@ -67,40 +67,46 @@ void VibLay::processReplacing(float** inputs, float** outputs, VstInt32 sampleFr
     for(int i=0; i<sampleFrames; ++i)
     {
         /* Delay Section */
-        signal_L = DelayLine.BufferL[index];
-        signal_R = DelayLine.BufferR[index];
+        if(FeedBack !=0){
+            signal_L = DelayLine.BufferL[index];
+            signal_R = DelayLine.BufferR[index];
 
-        DelayLine.BufferL[ index ] = (inL[i] + signal_L) * FeedBack;
-        DelayLine.BufferR[ index ] = (inR[i] + signal_R) * FeedBack;
+            DelayLine.BufferL[ index ] = (inL[i] + signal_L) * FeedBack;
+            DelayLine.BufferR[ index ] = (inR[i] + signal_R) * FeedBack;
+            
+            signal_L += inL[i];
+            signal_R += inR[i];
+        }
         
-        signal_L += inL[i];
-        signal_R += inR[i];
-
         /* Sequencer Output*/
-                
-        signal_L *= Seq.output();
-        signal_R *= Seq.output();
+        if(Pattern != 0){
+            signal_L *= Seq.output();
+            signal_R *= Seq.output();
+        }
+        
 
         /* Distortion & Low Pass Filter*/
-        float S = 1.f + 20 * Saturation;
-        
-        signal_L = saturation( signal_L * S);
-        signal_R = saturation( signal_R * S);
-        
-        signal_L += wavefolding( 2.f, signal_L) * 0.06;
-        signal_R += wavefolding( 2.f, signal_R) * 0.06;
-        
-        signal_L *= 0.4; // 4 dB Pad
-        signal_R *= 0.4; // 4 dB Pad
+        if(Saturation != 0){
+            float S = 1.f + 20 * Saturation;
 
-        LP.processSample(signal_L);
-        LP.processSample(signal_R);
+            signal_L = saturation( signal_L * S);
+            signal_R = saturation( signal_R * S);
 
+            signal_L += wavefolding( 2.f, signal_L) * 0.06;
+            signal_R += wavefolding( 2.f, signal_R) * 0.06;
+
+            signal_L *= 0.4; // ~4 dB Pad
+            signal_R *= 0.4; // ~4 dB Pad
+
+            LP.processSample(signal_L);
+            LP.processSample(signal_R);
+        }
+        
         /* OutputSignal -> Dry/Wet -> Clip Limiting*/
-        outL[i] = clip(1.f, inL[i] * (1.f-DryWet) + signal_L * DryWet, -1.f, 1.f);
-        outR[i] = clip(1.f, inR[i] * (1.f-DryWet) + signal_R * DryWet, -1.f, 1.f);
+        outL[i] = clip(1.f, inL[i] * (1.f-DryWet) + signal_L * DryWet, -0.8, 0.95);
+        outR[i] = clip(1.f, inR[i] * (1.f-DryWet) + signal_R * DryWet, -0.8, 0.95);
         
-        /* Update delay line and LFOs*/
+        /* Update Delay Line and Sequencer*/
         index ++;
         if( index >= sizeofdelayline )
             index -= sizeofdelayline;
@@ -139,7 +145,7 @@ float VibLay::denormParameters(VstInt32 index)
             break;
         
         case VDParam_Pattern:
-            return (int) (1 + Pattern * NUM_SEQUENCES);
+            return Pattern == 0 ? 1 : (int) (1 + Pattern * NUM_SEQUENCES);
             break;
             
         case VDParam_Rate:{
@@ -261,11 +267,17 @@ void VibLay::getParameterDisplay (VstInt32 index, char* text)
 {
     switch (index) {
         case VDParam_FeedBack:
+            if(FeedBack == 0)
+                vst_strncpy(text, "Del Off",  kVstMaxParamStrLen);
+            else
             int2string( FeedBack*100, text, kVstMaxParamStrLen);
             break;
             
         case VDParam_Pattern:
-            int2string( denormParameters(VDParam_Pattern), text, kVstMaxParamStrLen);
+            if(Pattern == 0)
+                vst_strncpy(text, "Var Off",  kVstMaxParamStrLen);
+            else
+                int2string( denormParameters(VDParam_Pattern), text, kVstMaxParamStrLen);
             break;
             
         case VDParam_Rate:
@@ -291,6 +303,9 @@ void VibLay::getParameterDisplay (VstInt32 index, char* text)
         break;
             
         case VDParam_Saturation:
+            if(Saturation == 0)
+                vst_strncpy(text, "Sat Off",  kVstMaxParamStrLen);
+            else
             int2string( Saturation*100, text, kVstMaxParamStrLen);
             break;
             

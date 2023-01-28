@@ -4,7 +4,6 @@
 #include "DelayLine.hpp"
 #include "Distorsions.hpp"
 #include "Filter.hpp"
-#include "LowFreqOsc.hpp"
 #include "Sequencer.hpp"
 
 
