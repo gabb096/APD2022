@@ -72,15 +72,14 @@ float wavefolding(float preGain, float sample){
     
     sample *= preGain;
     
-    int iteration = ( preGain >= 1 ) ? preGain : 1;
+    int iter = sample >= 0.0 ? ceil(sample) : -1*floor(sample);
     
-    for(int i=0; i < iteration; ++i)
+    for(int i=0; i < iter; i++)
     {
         if(sample > 1)
             sample = 2 - sample;
         else if(sample < -1)
             sample = -2 - sample;
-            
     }
 
     return sample;

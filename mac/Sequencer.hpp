@@ -15,7 +15,6 @@ class Sequencer {
     bool isSine;
     
     float frequency, counter, previewsOutput;
-    float ping, pong;
     
 public:
     
@@ -28,9 +27,6 @@ public:
     void setFrequenccy(float _freq);
     void setSequence(int _sequence);
     
-    float getPong();
-    float getPing();
-
     void advaceStep();
     void advanceCounter();
     
@@ -58,9 +54,6 @@ void Sequencer::setSequence(int _sequence){
     }
 }
 
-float Sequencer::getPong()         { return pong; }
-float Sequencer::getPing()         { return ping; }
-
 void Sequencer::advaceStep(){
     
     CurrentStep++;
@@ -77,13 +70,7 @@ void Sequencer::advanceCounter(){
     if(counter > 1.f){
         counter -= 1.f;
         advaceStep();
-        float t = pong;
-        pong = ping;
-        ping = t;
-        
     }
-
-
 }
 
 void Sequencer::initSequencer(int _SampleRate){
@@ -94,19 +81,16 @@ void Sequencer::initSequencer(int _SampleRate){
     CurrentSeq     = 0;
     frequency      = 1.f;
     counter        = 0.f;
-    ping           = 1.f;
-    pong           = 0.01;
-        
-    // initializing each pattern with a different euclidean rhythm
+    
+    // Initializing each pattern with a different euclidean rhythm
     int num_Notes [NUM_SEQUENCES] = { 4, 6, 7, 9, 10, 11, 12, 13 };
 
     for (int i=0; i<NUM_SEQUENCES; i++)
         for(int j=0; j<NUM_STEP; j++){
         
             int a = (j * num_Notes[i]) % NUM_STEP;
-            Sequences[i][j] = a < num_Notes[i] ? 1 : 0;
+            Sequences[i][j] = a < num_Notes[i] ? 1 : 0.001;
         }
-    
 }
 
 float Sequencer::output(){
@@ -123,7 +107,6 @@ float Sequencer::output(){
             
             previewsOutput = output;
         }
-            
         else{
             previewsOutput -= 60/(float)sampleRate; // Fade out for the decrease of the signal
             output = previewsOutput> 0.001 ? previewsOutput : 0.001; // MAX(previewsOutput,0)
