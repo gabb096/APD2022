@@ -11,7 +11,7 @@ AudioEffect* createEffectInstance(audioMasterCallback audioMaster){
 //============================== WeirdDelay FUNCTIONS ==============================
 
 VibLay::VibLay(audioMasterCallback audioMaster)
-: AudioEffectX(audioMaster, 0, VDParam_NumParam)    // n program, n parameters
+: AudioEffectX(audioMaster, NUM_PROGRAMS, VDParam_NumParam)    // n program, n parameters
 {
     setNumInputs(2);         // stereo in
     setNumOutputs(2);        // stereo out
@@ -32,8 +32,10 @@ void VibLay::InitPlugin(){
     Saturation = 0.5;
     DryWet     = 1.f;
     index      = 0;
+    pingPong   = 0;
     
     init();
+    InitPrograms();
 }
 
 void VibLay::init(){
@@ -80,6 +82,13 @@ void VibLay::processReplacing(float** inputs, float** outputs, VstInt32 sampleFr
         signal_L += inL[i];
         signal_R += inR[i];
         
+        /* Sequencer Output */
+        if(Pattern != 0){
+            signal_L *= pingPong ? Seq.ping() : Seq.output();
+            signal_R *= pingPong ? Seq.pong() : Seq.output();
+
+        }
+        
         /* Distortion & Low Pass Filter */
         /* Linear interpolation between 3 different signals.
         From 0 to 0.5 we interpolate a tube style saturation with the dry signal.
@@ -96,12 +105,6 @@ void VibLay::processReplacing(float** inputs, float** outputs, VstInt32 sampleFr
 
         LP.processSample(signal_L);
         LP.processSample(signal_R);
-        
-        /* Sequencer Output */
-        if(Pattern != 0){
-            signal_L *= Seq.output();
-            signal_R *= Seq.output();
-        }
         
         /* OutputSignal -> Dry/Wet -> Clip Limiting */
         outL[i] = clip(1.f, inL[i] * (1.f-DryWet) + signal_L * DryWet, -0.8, 0.95);
@@ -271,7 +274,7 @@ void VibLay::getParameterDisplay (VstInt32 index, char* text)
             if(FeedBack == 0)
                 vst_strncpy( text, "DLY OFF",  kVstMaxParamStrLen);
             else
-            int2string( FeedBack*100, text, kVstMaxParamStrLen);
+                int2string( FeedBack*100, text, kVstMaxParamStrLen);
             break;
             
         case VDParam_Pattern:
@@ -282,11 +285,10 @@ void VibLay::getParameterDisplay (VstInt32 index, char* text)
             break;
             
         case VDParam_Rate:
-            float2string( denormParameters(VDParam_Rate), text, kVstMaxParamStrLen);
+                float2string( denormParameters(VDParam_Rate), text, kVstMaxParamStrLen);
             break;
             
         case VDParam_DelayTime:
-            
             if(DelayTime <= 0.5)
                 float2string( denormParameters(VDParam_DelayTime), text, kVstMaxParamStrLen);
             else if (DelayTime <= 0.583)
@@ -377,5 +379,58 @@ bool VibLay::getProductString(char *name){
  
     vst_strncpy(name, "VBL", kVstMaxProductStrLen);
     return true;
+}
+
+bool VibLay::getProgramNameIndexed (VstInt32 category, VstInt32 index, char* text)
+{
+    if (index<NUM_PROGRAMS)
+    {
+        strcpy(text, presets[index].nome);
+        return true;
+    }
+    return false;
+}
+
+void VibLay::InitPrograms()
+{
+    
+    strcpy(presets[0].nome, "Default");
+    presets[0].Pset_DelayTime  = 0.9;
+    presets[0].Pset_FeedBack   = 0.f;
+    presets[0].Pset_Rate       = 0.1;
+    presets[0].Pset_Pattern    = 0.f;
+    presets[0].Pset_Saturation = 0.5;
+    presets[0].Pset_DryWet     = 0.5;
+    presets[0].PsetPingPong    = 0;
+    
+    strcpy(presets[1].nome, "PingPong ON");
+    presets[1].PsetPingPong = true;
+
+    strcpy(presets[2].nome, "PingPong OFF");
+    presets[2].PsetPingPong = false;
+
+    
+}
+
+void VibLay::setProgram (VstInt32 program)
+{
+    AudioEffect::setProgram(program);
+    
+    if(program >= NUM_PROGRAMS) return;
+    
+    VibLayPreset p = presets[program];
+
+    if(program == 1 || program == 2 )
+        pingPong = p.PsetPingPong;
+    else {
+        setParameter(VDParam_DelayTime,  p.Pset_DelayTime);
+        setParameter(VDParam_FeedBack,   p.Pset_FeedBack);
+        setParameter(VDParam_Rate,       p.Pset_Rate);
+        setParameter(VDParam_Pattern,    p.Pset_Pattern);
+        setParameter(VDParam_Saturation, p.Pset_Saturation);
+        setParameter(VDParam_DryWet,     p.Pset_DryWet);
+        setParameter(VDParam_PingPong,   p.PsetPingPong);
+    }
+
 }
 

@@ -6,9 +6,9 @@
 #include "Filter.hpp"
 #include "Sequencer.hpp"
 
+#define NUM_PROGRAMS 3
 
 using namespace std;
-
 
 enum VibLayParam{
     VDParam_DelayTime,
@@ -17,31 +17,40 @@ enum VibLayParam{
     VDParam_Pattern,
     VDParam_Saturation,
     VDParam_DryWet,
-    VDParam_NumParam
+    VDParam_NumParam,
+    VDParam_PingPong
 };
+
+struct VibLayPreset {
+    float Pset_DelayTime, Pset_FeedBack, Pset_Rate, Pset_Pattern, Pset_Saturation, Pset_DryWet;
+    bool PsetPingPong;
+    char nome[kVstMaxProgNameLen];
+};
+
 
 //====================================================================
 
 class VibLay : public AudioEffectX{
 
     float DelayTime, FeedBack, Rate, Pattern, Saturation, DryWet;
+    bool pingPong;
     int index;
     
-        
+    VibLayPreset presets[NUM_PROGRAMS];
     DelayLine DelayLine;
-    
-    Filter LP;
-        
     Sequencer Seq;
-    
+    Filter LP;
+
+    void InitPrograms();
     void InitPlugin();
-    
+
     float denormParameters(VstInt32 index);
 
 public:
 
     VibLay(audioMasterCallback audioMaster);
     ~VibLay();
+    
     void init();
     
     virtual void processReplacing(float** inputs, float** outputs, VstInt32 sampleFrames) override;
@@ -56,4 +65,8 @@ public:
     virtual bool getEffectName(char* name) override;
     virtual bool getVendorString(char* name) override;
     virtual bool getProductString(char* name) override;
+    
+    virtual bool getProgramNameIndexed (VstInt32 category, VstInt32 index, char* text) override;
+    virtual void setProgram (VstInt32 program) override;
+
 };
