@@ -15,6 +15,7 @@ The second path takes the signal into the `DELAY` section where it will be summe
 Next we find the `VIBRATO` stage. 
 Through the `Var[x]` parameter the user can select the type of amplitude modulation, from classic sine modulation to those with Eudlidean rhythms. 
 The `Rate` parameter allows the user to change the speed at which the modulation takes place.
+The preset selector can be used to enable and disable the `Ping Pong` effect.
 
 Finally we find the `SATURATION` stage, where the signal is first saturated with an approximation of the hyperbolic tangent, distorted with a slight `WaveFolding`, and finally filtered with a low-pass, before arriving at the `Dry/Wet` control.
 
@@ -36,5 +37,6 @@ La seconda strada porta il segnale nella sezione `DELAY` dove verrà sommato con
 Successivamente troviamo lo stadio di `VIBRATO`. 
 Tramite il parametro `Var[x]` l'utente può selezionare il tipo di modulazione in ampiezza, dalla classica modulazione sinusoidale a quelle con ritmiche Eudlidee. 
 Il parametro `Rate` permette di modificare la velocità con cui avviene la modulazione.
+Tramite il selettore dei preset è possibile abilitare e disabilitare l'effetto `Ping Pong`.
 
 Infine troviamo lo stadio di `SATURAZIONE` dove il segnale viene prima saturato con una approssimazione della tangente iperbolica, distorto con un leggero `WaveFolding` e finalmente filtrato con un passa basso, prima di arrivare al controllo di `Dry/Wet`
