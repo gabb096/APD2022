@@ -86,7 +86,6 @@ void VibLay::processReplacing(float** inputs, float** outputs, VstInt32 sampleFr
         if(Pattern != 0){
             signal_L *= pingPong ? Seq.ping() : Seq.output();
             signal_R *= pingPong ? Seq.pong() : Seq.output();
-
         }
         
         /* Distortion & Low Pass Filter */

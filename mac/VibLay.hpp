@@ -23,8 +23,8 @@ enum VibLayParam{
 
 struct VibLayPreset {
     float Pset_DelayTime, Pset_FeedBack, Pset_Rate, Pset_Pattern, Pset_Saturation, Pset_DryWet;
-    bool PsetPingPong;
-    char nome[kVstMaxProgNameLen];
+    bool  PsetPingPong;
+    char  nome[kVstMaxProgNameLen];
 };
 
 
@@ -33,8 +33,8 @@ struct VibLayPreset {
 class VibLay : public AudioEffectX{
 
     float DelayTime, FeedBack, Rate, Pattern, Saturation, DryWet;
-    bool pingPong;
-    int index;
+    bool  pingPong;
+    int   index;
     
     VibLayPreset presets[NUM_PROGRAMS];
     DelayLine DelayLine;

@@ -6,7 +6,6 @@
 
 class DelayLine{
     
-   
 public:
     
     int counter, sizeOfDelayTime;
